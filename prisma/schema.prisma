@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+  NOT_INFORMED
+}
+
+enum ShirtSize {
+  PP
+  P
+  M
+  G
+}
+
+enum ConsentStatus {
+  GRANTED
+  DENIED
+}
+
+model Family {
+  id               String   @id @default(cuid())
+  familyLabel      String?
+  zipCode          String
+  street           String
+  number           String
+  complement       String?
+  neighborhood     String
+  city             String
+  state            String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  createdByUserId  String
+
+  guardians        Guardian[]
+  children         Child[]
+  emergencyContacts EmergencyContact[]
+  authorizedPickups AuthorizedPickup[]
+  rsvps            RSVP[]
+
+  @@index([city])
+  @@index([state])
+  @@index([zipCode])
+}
+
+model Guardian {
+  id            String   @id @default(cuid())
+  familyId      String
+  fullName      String
+  cpf           String
+  phone         String
+  email         String?
+  relationship  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  family        Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, cpf])
+  @@index([fullName])
+  @@index([cpf])
+  @@index([phone])
+}
+
+model Child {
+  id                         String        @id @default(cuid())
+  familyId                   String
+  fullName                   String
+  nickname                   String?
+  birthDate                  DateTime
+  sex                        Sex           @default(NOT_INFORMED)
+  school                     String?
+  schoolGrade                String?
+  unitClass                  String?
+  allergies                  String?
+  foodRestriction            String?
+  continuousMedication       Boolean       @default(false)
+  medicationDetails          String?
+  hasHealthCondition         Boolean       @default(false)
+  healthConditionDetails     String?
+  specialAttentionNeeds      String?
+  generalNotes               String?
+  shirtSize                  ShirtSize?
+  eventDiscoveryChannel      String?
+  imageConsent               ConsentStatus
+  lgpdConsent                Boolean
+  checkedInAt                DateTime?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+
+  family                     Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  interests                  ChildInterest[]
+
+  @@index([fullName])
+  @@index([birthDate])
+  @@index([checkedInAt])
+}
+
+model ChildInterest {
+  id         String   @id @default(cuid())
+  childId    String
+  activity   String
+
+  child      Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([activity])
+}
+
+model EmergencyContact {
+  id          String   @id @default(cuid())
+  familyId    String
+  fullName    String
+  phone       String
+  createdAt   DateTime @default(now())
+
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([fullName])
+  @@index([phone])
+}
+
+model AuthorizedPickup {
+  id          String   @id @default(cuid())
+  familyId    String
+  fullName    String
+  document    String?
+  phone       String?
+  createdAt   DateTime @default(now())
+
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([fullName])
+}
+
+model RSVP {
+  id          String   @id @default(cuid())
+  familyId    String
+  status      String
+  source      String
+  sentAt      DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}

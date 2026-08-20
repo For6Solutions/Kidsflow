@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+}
+
+body {
+  background: #f4f5ef;
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+}
+
+::selection {
+  background: #d7ef43;
+  color: #18221d;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-title), sans-serif;
+}
