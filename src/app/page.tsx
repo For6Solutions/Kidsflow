@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Check, ClipboardList, UsersRound } from "lucide-react";
 import { NavbarMenu } from "@/components/ui/navbar-menu";
-import { getDashboardSummary } from "@/services/dashboard";
 
-export const dynamic = "force-dynamic";
-
-export default async function Home() {
-  const summary = await getDashboardSummary();
-
+export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.9),_rgba(255,255,255,0)_32%),linear-gradient(135deg,#ecfeff_0%,#e0f2fe_22%,#fef3c7_52%,#fef9c3_100%)] text-slate-900">
       <div className="relative mx-auto max-w-[1440px] px-5 py-5 sm:px-8 lg:px-10">
@@ -63,31 +58,31 @@ export default async function Home() {
                   <p className="mt-2 text-2xl font-black">Dia de Criança</p>
                 </div>
                 <span className="rounded-full bg-[#facc15] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-900 shadow-[0_8px_14px_rgba(250,204,21,0.45)]">
-                  Live
+                  Pronto
                 </span>
               </div>
 
               <div className="mt-8 grid grid-cols-2 gap-3">
                 <div className="rounded-[24px] bg-white/10 p-4 shadow-inner shadow-white/10 backdrop-blur-sm">
                   <UsersRound size={20} className="text-[#facc15]" />
-                  <p className="mt-5 text-3xl font-black">{summary.totalChildren}</p>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-sky-100/80">Crianças</p>
+                  <p className="mt-5 text-3xl font-black">03</p>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-sky-100/80">Fluxos</p>
                 </div>
 
                 <div className="rounded-[24px] bg-[linear-gradient(135deg,#facc15,#f59e0b)] p-4 text-slate-900 shadow-[0_18px_28px_rgba(245,158,11,0.35)]">
                   <Check size={20} />
-                  <p className="mt-5 text-3xl font-black">{summary.attendanceRate}%</p>
-                  <p className="text-[11px] uppercase tracking-[0.14em] text-slate-700">Check-in</p>
+                  <p className="mt-5 text-3xl font-black">100%</p>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-slate-700">Pronto para operar</p>
                 </div>
               </div>
 
               <div className="mt-4 rounded-[24px] border border-white/15 bg-slate-950/15 p-4 shadow-inner shadow-slate-950/20">
                 <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-[0.18em] text-sky-100/80">
-                  <span>Presença</span>
-                  <span>{summary.checkedInChildren} / {summary.totalChildren}</span>
+                  <span>Operação</span>
+                  <span>Pronta para usar</span>
                 </div>
                 <div className="mt-4 h-2.5 rounded-full bg-white/10">
-                  <div className="h-2.5 rounded-full bg-[linear-gradient(90deg,#facc15,#7dd3fc)]" style={{ width: `${summary.attendanceRate}%` }} />
+                  <div className="h-2.5 w-full rounded-full bg-[linear-gradient(90deg,#facc15,#7dd3fc)]" />
                 </div>
               </div>
 

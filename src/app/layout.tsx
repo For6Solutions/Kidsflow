@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
+
+import { AuthProvider } from "@/components/auth/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,9 +12,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full bg-slate-50 text-slate-900">
-        <ClerkProvider>{children}</ClerkProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-      

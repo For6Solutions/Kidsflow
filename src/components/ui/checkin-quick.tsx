@@ -16,6 +16,8 @@ export function CheckInQuick() {
   const [loading, setLoading] = useState(false);
 
   async function handleSelect(item: SearchItem) {
+    if (loading) return;
+
     if (item.type !== "child") {
       setMessage("Selecione uma criança para check-in.");
       return;
@@ -24,24 +26,28 @@ export function CheckInQuick() {
     setLoading(true);
     setMessage("Registrando chegada...");
 
-    const response = await fetch("/api/checkin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ childId: item.id }),
-    });
+    try {
+      const response = await fetch("/api/checkin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ childId: item.id }),
+      });
 
-    const data = (await response.json()) as { checkedInAt?: string; error?: string };
+      const data = (await response.json().catch(() => ({}))) as { checkedInAt?: string; error?: string };
 
-    if (!response.ok) {
-      setMessage(data.error || "Erro ao registrar check-in");
+      if (!response.ok) {
+        setMessage(data.error || "Erro ao registrar check-in");
+        return;
+      }
+
+      setMessage(`Check-in confirmado para ${item.label}.`);
+    } catch {
+      setMessage("Não foi possível registrar o check-in agora.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setMessage(`Check-in confirmado para ${item.label}.`);
-    setLoading(false);
   }
 
   return (
@@ -54,7 +60,7 @@ export function CheckInQuick() {
       <div className="mt-5">
         <AutocompleteSearch onSelect={handleSelect} placeholder="Buscar criança para check-in" />
       </div>
-      <p className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">{loading ? "Aguarde..." : message || "Pronto para registrar a próxima presença."}</p>
+      <p aria-live="polite" className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">{loading ? "Aguarde..." : message || "Pronto para registrar a próxima presença."}</p>
     </section>
   );
 }

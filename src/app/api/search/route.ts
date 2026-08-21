@@ -1,12 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+import { getAuthenticatedUserId } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { globalSearch } from "@/services/search";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session.userId) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

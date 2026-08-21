@@ -1,7 +1,10 @@
 import { CheckInQuick } from "@/components/ui/checkin-quick";
 import { PanelShell } from "@/components/ui/panel-shell";
+import { requireUser } from "@/lib/auth";
 
-export default function CheckinPage() {
+export default async function CheckinPage() {
+  await requireUser();
+
   return (
     <PanelShell
       title="Check-in rápido"

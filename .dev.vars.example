@@ -1,0 +1,4 @@
+# Variáveis usadas pelo preview do OpenNext/Wrangler.
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/kidsflow"
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
+CLERK_SECRET_KEY=""

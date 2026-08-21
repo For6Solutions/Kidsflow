@@ -2,11 +2,14 @@ import Link from "next/link";
 
 import { PanelShell } from "@/components/ui/panel-shell";
 import { StatCard } from "@/components/ui/stat-card";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function RelatoriosPage() {
+  await requireUser();
+
   const [byCity, bySex, byShirt] = await Promise.all([
     db.family.groupBy({ by: ["city"], _count: { _all: true }, orderBy: { _count: { city: "desc" } }, take: 8 }),
     db.child.groupBy({ by: ["sex"], _count: { _all: true } }),

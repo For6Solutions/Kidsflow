@@ -1,10 +1,12 @@
 import { PanelShell } from "@/components/ui/panel-shell";
 import { StatCard } from "@/components/ui/stat-card";
+import { requireUser } from "@/lib/auth";
 import { getDashboardSummary } from "@/services/dashboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function PanelHomePage() {
+  await requireUser();
   const summary = await getDashboardSummary();
 
   return (

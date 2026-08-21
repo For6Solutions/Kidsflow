@@ -19,7 +19,7 @@ const defaultValues: FormData = {
   neighborhood: "",
   city: "",
   state: "",
-  child: { fullName: "", birthDate: "" },
+  child: { fullName: "", birthDate: "", imageConsent: "GRANTED", lgpdConsent: false },
   guardian: { fullName: "", relationship: "", phone: "" },
 };
 
@@ -35,6 +35,8 @@ function getAge(birthDate: string) {
 
 export function FamilyRegistrationForm() {
   const [status, setStatus] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const form = useForm<FormData>({ resolver: zodResolver(createFamilySchema) as never, defaultValues, mode: "onBlur" });
   const age = getAge(useWatch({ control: form.control, name: "child.birthDate" }));
   const guardianName = form.register("guardian.fullName");
@@ -42,28 +44,47 @@ export function FamilyRegistrationForm() {
   async function fillByCep() {
     const cep = form.getValues("zipCode");
     if (!cep) return;
-    const response = await fetch(`/api/viacep?cep=${encodeURIComponent(cep)}`);
-    const data = (await response.json()) as { street?: string; neighborhood?: string; city?: string; state?: string; error?: string };
-    if (data.error) {
-      setStatus(data.error);
-      return;
+    setCepLoading(true);
+
+    try {
+      const response = await fetch(`/api/viacep?cep=${encodeURIComponent(cep)}`);
+      const data = (await response.json()) as { street?: string; neighborhood?: string; city?: string; state?: string; error?: string };
+      if (!response.ok || data.error) {
+        setStatus(data.error || "Não foi possível consultar o CEP.");
+        return;
+      }
+
+      form.setValue("street", data.street || "", { shouldValidate: true });
+      form.setValue("neighborhood", data.neighborhood || "", { shouldValidate: true });
+      form.setValue("city", data.city || "", { shouldValidate: true });
+      form.setValue("state", data.state || "", { shouldValidate: true });
+      setStatus("Endereço preenchido pelo ViaCEP.");
+    } catch {
+      setStatus("Não foi possível consultar o CEP agora.");
+    } finally {
+      setCepLoading(false);
     }
-    form.setValue("street", data.street || "");
-    form.setValue("neighborhood", data.neighborhood || "");
-    form.setValue("city", data.city || "");
-    form.setValue("state", data.state || "");
   }
 
   async function submit(data: FormData) {
     setStatus("Salvando cadastro...");
-    const response = await fetch("/api/families", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    if (!response.ok) {
-      const error = (await response.json()) as { error?: string };
-      setStatus(error.error || "Erro ao salvar");
-      return;
+    setSubmitting(true);
+
+    try {
+      const response = await fetch("/api/families", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setStatus(result.error || "Erro ao salvar");
+        return;
+      }
+
+      setStatus("Cadastro salvo com sucesso.");
+      form.reset(defaultValues);
+    } catch {
+      setStatus("Não foi possível salvar agora. Verifique a conexão e tente novamente.");
+    } finally {
+      setSubmitting(false);
     }
-    setStatus("Cadastro salvo com sucesso.");
-    form.reset(defaultValues);
   }
 
   return (
@@ -80,7 +101,7 @@ export function FamilyRegistrationForm() {
       <section className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
         <div className="mb-4"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-700">Endereço</p><h2 className="mt-2 text-xl font-black text-slate-900">Onde a família mora</h2></div>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-bold text-slate-700">CEP<div className="mt-2 flex gap-2"><input className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(14,165,233,0.12)]" {...form.register("zipCode")} /><button type="button" className="rounded-2xl bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] px-4 py-3 text-sm font-black text-white shadow-[0_12px_20px_rgba(37,99,235,0.35)]" onClick={fillByCep}>ViaCEP</button></div></label>
+          <label className="text-sm font-bold text-slate-700">CEP<div className="mt-2 flex gap-2"><input className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(14,165,233,0.12)]" {...form.register("zipCode")} /><button type="button" disabled={cepLoading} className="rounded-2xl bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] px-4 py-3 text-sm font-black text-white shadow-[0_12px_20px_rgba(37,99,235,0.35)] disabled:cursor-wait disabled:opacity-60" onClick={fillByCep}>{cepLoading ? "Buscando..." : "ViaCEP"}</button></div></label>
           <label className="text-sm font-bold text-slate-700">Número<input className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(14,165,233,0.12)]" {...form.register("number")} /></label>
           <label className="text-sm font-bold text-slate-700 md:col-span-2">Endereço<input className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(14,165,233,0.12)]" {...form.register("street")} /></label>
           <label className="text-sm font-bold text-slate-700">Cidade<input className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:shadow-[0_0_0_4px_rgba(14,165,233,0.12)]" {...form.register("city")} /></label>
@@ -100,9 +121,28 @@ export function FamilyRegistrationForm() {
         </div>
       </section>
 
+      <section className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+        <div className="mb-4"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-700">Consentimentos</p><h2 className="mt-2 text-xl font-black text-slate-900">Permissões do cadastro</h2><p className="mt-2 text-sm text-slate-500">Registre as escolhas do responsável para manter o evento em conformidade.</p></div>
+        <fieldset>
+          <legend className="text-sm font-bold text-slate-700">Autoriza o uso de imagem?</legend>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <label className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+              <input type="radio" value="GRANTED" {...form.register("child.imageConsent")} /> Sim, autorizo
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+              <input type="radio" value="DENIED" {...form.register("child.imageConsent")} /> Não autorizo
+            </label>
+          </div>
+        </fieldset>
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700">
+          <input type="checkbox" className="mt-1" {...form.register("child.lgpdConsent")} />
+          <span>Confirmo que o responsável autorizou o tratamento dos dados necessários para a participação no evento.</span>
+        </label>
+      </section>
+
       {Object.keys(form.formState.errors).length > 0 ? <p className="text-sm font-medium text-rose-600">Existem campos inválidos. Verifique antes de salvar.</p> : null}
       {status ? <p className="text-sm font-medium text-slate-700">{status}</p> : null}
-      <button type="submit" className="w-full rounded-[22px] bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] px-5 py-3.5 text-base font-black text-white shadow-[0_18px_28px_rgba(37,99,235,0.32)] transition hover:-translate-y-0.5">Salvar cadastro</button>
+      <button type="submit" disabled={submitting} className="w-full rounded-[22px] bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] px-5 py-3.5 text-base font-black text-white shadow-[0_18px_28px_rgba(37,99,235,0.32)] transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60">{submitting ? "Salvando..." : "Salvar cadastro"}</button>
     </form>
   );
 }

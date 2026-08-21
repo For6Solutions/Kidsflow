@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   "name": "kidsflow",
-  "compatibility_date": "2026-08-20",
+  "compatibility_date": "2026-08-21",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
@@ -13,5 +13,8 @@
     "NEXT_PUBLIC_CLERK_SIGN_UP_URL": "/sign-up",
     "NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL": "/panel",
     "NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL": "/panel"
+  },
+  "observability": {
+    "enabled": true
   }
 }

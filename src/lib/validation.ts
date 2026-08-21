@@ -14,6 +14,8 @@ export const createFamilySchema = z.object({
   child: z.object({
     fullName: z.string().trim().min(3).max(140),
     birthDate: z.string().date(),
+    imageConsent: z.enum(["GRANTED", "DENIED"]),
+    lgpdConsent: z.boolean().refine((value) => value, "É necessário aceitar o tratamento de dados"),
   }),
   guardian: z.object({
     fullName: z.string().trim().min(3).max(140),

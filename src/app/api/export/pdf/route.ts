@@ -1,8 +1,11 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { jsPDF } from "jspdf";
 
+import { getAuthenticatedUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+
+const PAGE_WIDTH = 595;
+const PAGE_HEIGHT = 842;
+const PAGE_MARGIN = 42;
 
 function formatDate(value: Date | string | null) {
   if (!value) return "—";
@@ -12,14 +15,81 @@ function formatDate(value: Date | string | null) {
 }
 
 function joinGuardians(guardians: { fullName: string; relationship: string | null }[]) {
-  return guardians
-    .map((guardian) => `${guardian.fullName}${guardian.relationship ? ` (${guardian.relationship})` : ""}`)
-    .join("; ") || "—";
+  return (
+    guardians
+      .map((guardian) => `${guardian.fullName}${guardian.relationship ? ` (${guardian.relationship})` : ""}`)
+      .join("; ") || "—"
+  );
+}
+
+function toPdfText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "?")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)");
+}
+
+function drawText(text: string, x: number, y: number, fontSize: number) {
+  return `BT /F1 ${fontSize} Tf ${x} ${y} Td (${toPdfText(text)}) Tj ET`;
+}
+
+function createPdf(pages: string[][]) {
+  const pageCount = Math.max(pages.length, 1);
+  const pageObjectIds = pages.map((_, index) => 4 + index * 2);
+  const objects = new Array<string>(3 + pageCount * 2);
+
+  objects[0] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objects[1] = `<< /Type /Pages /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageCount} >>`;
+  objects[2] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
+
+  pages.forEach((lines, pageIndex) => {
+    const pageObjectId = 4 + pageIndex * 2;
+    const contentObjectId = pageObjectId + 1;
+    let y = PAGE_HEIGHT - PAGE_MARGIN;
+    const commands = [
+      "0.07 0.46 0.43 rg 42 815 511 2 re f",
+      drawText("Kidsflow", PAGE_MARGIN, y, pageIndex === 0 ? 18 : 12),
+    ];
+    y -= pageIndex === 0 ? 28 : 22;
+
+    lines.forEach((line, lineIndex) => {
+      const isTitle = pageIndex === 0 && lineIndex === 0;
+      const fontSize = isTitle ? 18 : line.startsWith("Relatorio") ? 11 : 9;
+      commands.push(drawText(line, PAGE_MARGIN, y, fontSize));
+      y -= isTitle ? 24 : line ? 14 : 8;
+    });
+
+    const content = commands.join("\n");
+    objects[pageObjectId - 1] =
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] ` +
+      `/Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectId} 0 R >>`;
+    objects[contentObjectId - 1] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  return new TextEncoder().encode(pdf);
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session.userId) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -35,85 +105,28 @@ export async function GET() {
     take: 120,
   });
 
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 42;
-
-  doc.setFillColor(15, 118, 110);
-  doc.rect(0, 0, pageWidth, 72, "F");
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text("Kidsflow", margin, 36);
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text("Relatório de cadastro", margin, 56);
-
-  const summaryY = 100;
-  const summaryCardWidth = (pageWidth - margin * 2 - 18) / 3;
-  const summaryCards = [
-    { label: "Crianças", value: String(children.length) },
-    { label: "Famílias", value: String(new Set(children.map((child) => child.familyId)).size) },
-    { label: "Cidades", value: String(new Set(children.map((child) => child.family.city)).size) },
+  const familyCount = new Set(children.map((child) => child.familyId)).size;
+  const cityCount = new Set(children.map((child) => child.family.city)).size;
+  const rows = [
+    "Relatorio de cadastro",
+    `Resumo: ${children.length} criancas | ${familyCount} familias | ${cityCount} cidades`,
+    "",
   ];
 
-  summaryCards.forEach((card, index) => {
-    const x = margin + index * (summaryCardWidth + 9);
-    doc.setFillColor(245, 247, 250);
-    doc.roundedRect(x, summaryY, summaryCardWidth, 52, 8, 8, "F");
-    doc.setTextColor(71, 85, 105);
-    doc.setFontSize(10);
-    doc.text(card.label, x + 16, summaryY + 18);
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text(card.value, x + 16, summaryY + 40);
-  });
-
-  let y = 188;
-
   children.forEach((child, index) => {
-    if (y > pageHeight - 120) {
-      doc.addPage();
-      y = 52;
-    }
-
-    const guardianText = joinGuardians(child.family.guardians);
-    const cardHeight = 86;
-
-    doc.setDrawColor(226, 232, 240);
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, cardHeight, 10, 10, "FD");
-
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`${index + 1}. ${child.fullName}`, margin + 16, y + 22);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(71, 85, 105);
-
-    const lines = [
-      `Apelido: ${child.nickname || "—"}`,
-      `Nascimento: ${formatDate(child.birthDate)}`,
-      `Sexo: ${child.sex}`,
-      `Responsável: ${guardianText}`,
-      `Família: ${child.family.familyLabel || child.family.city}`,
-      `Cidade/UF: ${child.family.city} / ${child.family.state}`,
-    ];
-
-    lines.forEach((line, lineIndex) => {
-      doc.text(line, margin + 16, y + 40 + lineIndex * 14);
-    });
-
-    y += cardHeight + 14;
+    rows.push(`${index + 1}. ${child.fullName}`);
+    rows.push(`Nascimento: ${formatDate(child.birthDate)} | Sexo: ${child.sex}`);
+    rows.push(`Responsavel: ${joinGuardians(child.family.guardians)}`);
+    rows.push(`Familia: ${child.family.familyLabel || child.family.city} | Cidade/UF: ${child.family.city} / ${child.family.state}`);
+    rows.push("");
   });
 
-  return new NextResponse(doc.output("arraybuffer"), {
+  const pageSize = 48;
+  const pages = Array.from({ length: Math.max(1, Math.ceil(rows.length / pageSize)) }, (_, index) =>
+    rows.slice(index * pageSize, (index + 1) * pageSize),
+  );
+
+  return new NextResponse(createPdf(pages), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
