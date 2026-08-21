@@ -26,7 +26,7 @@ export async function globalSearch(query: string) {
         ],
       },
       take: 8,
-      select: { id: true, fullName: true, familyId: true },
+      select: { id: true, fullName: true, familyId: true, phone: true, relationship: true },
       orderBy: { createdAt: "desc" },
     }),
     db.child.findMany({
@@ -47,8 +47,10 @@ export async function globalSearch(query: string) {
     ...guardians.map((item) => ({
       type: "guardian",
       id: item.id,
-      label: item.fullName,
+      label: item.relationship ? `${item.fullName} — ${item.relationship}` : item.fullName,
       familyId: item.familyId,
+      phone: item.phone,
+      relationship: item.relationship,
     })),
     ...children.map((item) => ({
       type: "child",

@@ -5,12 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.9",
     "@hookform/resolvers": "^5.9.1",
+    "@opennextjs/cloudflare": "^1.20.2",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "date-fns": "^4.4.0",
@@ -23,7 +26,6 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.85.0",
     "recharts": "^3.10.1",
-    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -34,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.125.0"
   }
 }

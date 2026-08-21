@@ -25,11 +25,11 @@ export default async function RelatoriosPage() {
       </div>
 
       <section className="mt-6 grid gap-4 md:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Distribuição por cidade</h2>
-          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        <article className="rounded-[28px] border border-slate-200 bg-white/80 p-5 shadow-[0_20px_35px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+          <h2 className="text-lg font-black text-slate-900">Distribuição por cidade</h2>
+          <ul className="mt-4 space-y-2 text-sm text-slate-700">
             {byCity.map((item) => (
-              <li key={item.city} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <li key={item.city} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2.5">
                 <span>{item.city}</span>
                 <strong>{item._count._all}</strong>
               </li>
@@ -37,11 +37,11 @@ export default async function RelatoriosPage() {
           </ul>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Tamanhos de camiseta</h2>
-          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        <article className="rounded-[28px] border border-slate-200 bg-white/80 p-5 shadow-[0_20px_35px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+          <h2 className="text-lg font-black text-slate-900">Tamanhos de camiseta</h2>
+          <ul className="mt-4 space-y-2 text-sm text-slate-700">
             {byShirt.map((item) => (
-              <li key={`${item.shirtSize}`} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <li key={`${item.shirtSize}`} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2.5">
                 <span>{item.shirtSize || "Não informado"}</span>
                 <strong>{item._count._all}</strong>
               </li>
@@ -50,14 +50,14 @@ export default async function RelatoriosPage() {
         </article>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-900">Exportações</h2>
+      <section className="mt-6 rounded-[30px] border border-slate-200 bg-white/80 p-5 shadow-[0_20px_35px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+        <h2 className="text-lg font-black text-slate-900">Exportações</h2>
         <p className="mt-1 text-sm text-slate-600">Baixe os dados do evento para análise externa.</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link href="/api/export/csv" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+          <Link href="/api/export/csv" className="rounded-2xl bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(29,78,216,0.28)]">
             Exportar CSV
           </Link>
-          <Link href="/api/export/pdf" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+          <Link href="/api/export/pdf" className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-800 shadow-sm">
             Exportar PDF
           </Link>
         </div>

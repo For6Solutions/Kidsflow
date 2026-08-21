@@ -8,7 +8,7 @@ export default async function PanelHomePage() {
   const summary = await getDashboardSummary();
 
   return (
-    <PanelShell title="Painel Kidsflow" subtitle="Visão geral de cadastros, check-ins e alertas operacionais.">
+    <PanelShell title="Painel Criança Feliz" subtitle="Visão geral de cadastros, check-ins e alertas operacionais.">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Famílias cadastradas" value={summary.totalFamilies} />
         <StatCard label="Crianças cadastradas" value={summary.totalChildren} />

@@ -1,30 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
+  --background: #f8fbff;
   --foreground: #0f172a;
+  --primary: #0ea5e9;
+  --secondary: #facc15;
+  --accent: #f97316;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-body);
+  --font-sans: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: #f4f5ef;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ecfeff 0%, #e0f2fe 25%, #fef3c7 55%, #fef9c3 100%);
   color: var(--foreground);
-  font-family: var(--font-body), sans-serif;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(14, 165, 233, 0.35);
+  outline-offset: 3px;
 }
 
 ::selection {
-  background: #d7ef43;
-  color: #18221d;
+  background: #facc15;
+  color: #0f172a;
 }
 
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-title), sans-serif;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+img {
+  max-width: 100%;
+  display: block;
 }

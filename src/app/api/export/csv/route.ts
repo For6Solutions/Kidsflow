@@ -11,7 +11,11 @@ export async function GET() {
 
   const children = await db.child.findMany({
     include: {
-      family: true,
+      family: {
+        include: {
+          guardians: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -21,26 +25,27 @@ export async function GET() {
     "Apelido",
     "Nascimento",
     "Sexo",
+    "Responsável",
+    "Parentesco",
+    "Telefone",
     "Família",
     "Cidade",
     "UF",
-    "Restricoes",
-    "Saúde",
-    "AutorizaçãoImagem",
   ];
 
   const lines = children.map((child) => {
+    const guardian = child.family.guardians[0];
     const values = [
       child.fullName,
       child.nickname ?? "",
       child.birthDate.toISOString().slice(0, 10),
       child.sex,
+      guardian?.fullName ?? "",
+      guardian?.relationship ?? "",
+      guardian?.phone ?? "",
       child.family.familyLabel ?? "",
       child.family.city,
       child.family.state,
-      child.foodRestriction ?? child.allergies ?? "",
-      child.healthConditionDetails ?? child.medicationDetails ?? "",
-      child.imageConsent,
     ];
 
     return values.map((value) => `"${String(value).replaceAll("\"", "\"\"")}"`).join(",");

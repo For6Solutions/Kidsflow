@@ -7,14 +7,17 @@ type SearchItem = {
   id: string;
   label: string;
   familyId: string;
+  phone?: string;
+  relationship?: string;
 };
 
 type Props = {
   placeholder?: string;
+  allowedTypes?: string[];
   onSelect?: (item: SearchItem) => void;
 };
 
-export function AutocompleteSearch({ placeholder, onSelect }: Props) {
+export function AutocompleteSearch({ placeholder, allowedTypes, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,14 +33,14 @@ export function AutocompleteSearch({ placeholder, onSelect }: Props) {
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         const data = (await response.json()) as { items: SearchItem[] };
-        setItems(data.items || []);
+        setItems((data.items || []).filter((item) => !allowedTypes || allowedTypes.includes(item.type)));
       } finally {
         setLoading(false);
       }
     }, 250);
 
     return () => clearTimeout(timeout);
-  }, [query]);
+  }, [allowedTypes, query]);
 
   return (
     <div className="relative">
@@ -58,12 +61,12 @@ export function AutocompleteSearch({ placeholder, onSelect }: Props) {
                 type="button"
                 className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                 onClick={() => {
-                  setQuery(item.label);
+                  setQuery(item.relationship ? `${item.label} — ${item.relationship}` : item.label);
                   setItems([]);
                   onSelect?.(item);
                 }}
               >
-                {item.label} <span className="text-xs text-slate-400">({item.type})</span>
+                {item.label} <span className="text-xs text-slate-400">({item.type === "guardian" ? "responsável" : item.type})</span>
               </button>
             </li>
           ))}
